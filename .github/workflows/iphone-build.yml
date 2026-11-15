@@ -1,0 +1,40 @@
+
+name: DYKiller iPhone Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+
+    env:
+      THEOS_LOGOS_REV: a62370066a97e36d59b200a9fa10c5091f5e8972
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract source
+        run: |
+          unzip -q DYKiller-updated-source.zip -d "$RUNNER_TEMP/dykiller"
+          echo "PROJECT=$RUNNER_TEMP/dykiller/DYKiller-main" >> "$GITHUB_ENV"
+
+      - name: Setup Theos
+        run: |
+          cd "$PROJECT"
+          bash .github/scripts/setup-theos.sh
+
+      - name: Build packages
+        run: |
+          cd "$PROJECT"
+          bash .github/scripts/build-packages.sh
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: DYKiller-deb
+          path: ${{ runner.temp }}/dykiller/DYKiller-main/packages/*.deb
